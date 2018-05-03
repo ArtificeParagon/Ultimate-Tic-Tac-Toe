@@ -1,23 +1,25 @@
 package Server;
 
+import java.io.*;
+import java.net.Socket;
+
 //X and O will each have a player connection created
 public class PlayerConnection {
 
-    private final char playerToken;
-    private boolean isLocal;
+    private Socket connection;
+    private ObjectInputStream inputFromServer;
+    private ObjectOutputStream outputToServer;
 
-    public PlayerConnection(char token, boolean isLocal) {
-        playerToken = token;
-        this.isLocal = isLocal;
-        connectToServer();
+    public PlayerConnection(String ip, int port) {
+        connectToServer(ip, port);
     }
 
-    private void connectToServer(){
-        if(isLocal){
-            //TODO: connect to local server
-        } else {
-            //TODO: open prompt to connect to multiplayer
-        }
+    private void connectToServer(String ip, int port){
+        try{
+            connection = new Socket(ip, port);
+//            outputToServer = new ObjectOutputStream(connection.getOutputStream());
+//            inputFromServer = new ObjectInputStream(connection.getInputStream());
+        } catch (IOException e) {e.printStackTrace();}
     }
 
 }

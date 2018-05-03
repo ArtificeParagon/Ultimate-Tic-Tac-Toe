@@ -8,7 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class HostServer {
+public class HostServer implements Runnable {
 
     private static ArrayList<ClientThread> clients;
     private static int oldPort;
@@ -21,9 +21,13 @@ public class HostServer {
     public HostServer(){
         try{
             System.out.println("Starting server...");
-            serverSocket = new ServerSocket(0);
+            serverSocket = new ServerSocket(8080);
             System.out.println("Awaiting connection on port " + serverSocket.getLocalPort());
         } catch(Exception e) {e.printStackTrace();}
+    }
+
+    public int getPort(){
+        return serverSocket.getLocalPort();
     }
 
     public static void main(String args[]){
@@ -48,6 +52,24 @@ public class HostServer {
         }
     }
 
+    @Override
+    public void run() {
+        try {
+            Socket playerOneSocket = serverSocket.accept();
+            playerOne = new ClientThread(playerOneSocket);
+            System.out.println("X connected");
+
+            Socket playerTwoSocket = serverSocket.accept();
+            playerTwo = new ClientThread(playerTwoSocket);
+            System.out.println("O Connected");
+
+//            playerOne.start();
+//            playerTwo.start();
+        } catch(Exception e){e.printStackTrace();}
+
+    }
+
+    //TODO: Edit this to better suite the game
     static class ClientThread extends Thread {
 
         Socket socket;

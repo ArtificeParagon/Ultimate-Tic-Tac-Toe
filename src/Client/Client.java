@@ -1,6 +1,8 @@
 package Client;
 
 import Game.Renderer;
+import Server.HostServer;
+import Server.PlayerConnection;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -9,6 +11,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+
+import java.net.Socket;
 
 public class Client extends Application {
 
@@ -33,6 +37,19 @@ public class Client extends Application {
         root.getChildren().addAll(canvas);
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
+
+        startServer();
+        connectToServer();
+    }
+
+    public void startServer(){
+        HostServer server = new HostServer();
+        Thread serverThread = new Thread(server);
+        serverThread.start();
+    }
+    public void connectToServer(){
+        PlayerConnection one = new PlayerConnection("localhost", 8080);
+        PlayerConnection two = new PlayerConnection("localhost", 8080);
     }
 
     private void handleClick(double x, double y, double boardWidth){
