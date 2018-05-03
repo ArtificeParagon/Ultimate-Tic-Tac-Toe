@@ -8,7 +8,7 @@ public class Board {
     public Board(){
         pieces = new char[9];
         for(int i = 0; i < pieces.length; i++){
-            pieces[i] = 0;
+            pieces[i] = '-';
         }
         boardWon = false;
 
@@ -34,21 +34,17 @@ public class Board {
                 boardPiece = one;
             }
         }
-        
+
     }
 
-    private boolean isValidMove(char piece, int square){
-        return true;
+    private boolean isValidMove(int square){
+        if(boardWon) return false;
+        if(pieces[square] == '-') return true;
+        return false;
     }
 
     public void playPiece(char piece, int square){
-        if(boardWon){
-
-        } else if (isValidMove(piece, square)){
-
-        } else {
-
-        }
+        pieces[square] = piece;
         checkForWin();
     }
 
