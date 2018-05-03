@@ -20,6 +20,9 @@ public class Renderer {
         }
         return INSTANCE;
     }
+    public static Renderer getInstance(){
+        return INSTANCE;
+    }
 
     public void drawBoard(){
         int third = (int) canvasHeight / 3;
@@ -45,6 +48,39 @@ public class Renderer {
                 gc.fillRect((smallThird * 2)-halfWidth + (x*third), y*third, halfWidth*2, third);
             }
         }
+    }
+
+    public void drawX(int boardX, int boardY, int pieceX, int pieceY){
+        double smallThird = canvasHeight/9;
+        smallThird -= 20;
+        double tokenX = getPieceX(boardX, pieceX);
+        double tokenY = getPieceY(boardY, pieceY);
+
+        gc.setStroke(Color.RED);
+        gc.setLineWidth(4);
+        gc.strokeLine(tokenX, tokenY, tokenX + smallThird, tokenY + smallThird);
+        gc.strokeLine(tokenX, tokenY + smallThird, tokenX + smallThird, tokenY);
+    }
+
+    public void drawO(int boardX, int boardY, int pieceX, int pieceY){
+        double pieceWidth = (canvasHeight/9)-20;
+
+        gc.setStroke(Color.BLUE);
+        gc.setLineWidth(4);
+        gc.strokeOval(getPieceX(boardX, pieceX), getPieceY(boardY, pieceY), pieceWidth, pieceWidth);
+    }
+
+    private double getPieceX(int boardX, int pieceX){
+        double third = canvasHeight / 3;
+        double smallThird = canvasHeight / 9;
+        double result = (third * boardX) + (smallThird * pieceX) + 10;
+        return result;
+    }
+    private double getPieceY(int boardY, int pieceY){
+        double third = canvasHeight / 3;
+        double smallThird = canvasHeight / 9;
+        double result = (third * boardY) + (smallThird * pieceY) + 10;
+        return result;
     }
 
 }

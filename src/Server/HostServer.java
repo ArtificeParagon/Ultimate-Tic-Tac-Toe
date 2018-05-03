@@ -17,6 +17,7 @@ public class HostServer implements Runnable {
     private ClientThread playerOne;
     private ClientThread playerTwo;
     private ServerSocket serverSocket;
+    private boolean running = true;
 
     public HostServer(){
         try{
@@ -28,6 +29,12 @@ public class HostServer implements Runnable {
 
     public int getPort(){
         return serverSocket.getLocalPort();
+    }
+
+    public void shutdown(){
+            playerOne.stopRunning();
+            playerTwo.stopRunning();
+            this.running = false;
     }
 
     public static void main(String args[]){
@@ -46,10 +53,16 @@ public class HostServer implements Runnable {
         } catch (Exception e) {e.printStackTrace();}
     }
 
-    private static synchronized void broadcast(String message){
-        for(ClientThread client : clients){
-            client.sendMessage(message);
-        }
+    private void broadcast(String message){
+        playerOne.sendMessage(message);
+        playerTwo.sendMessage(message);
+    }
+    private void broadcastPlay(int boardX, int boardY, int pieceX, int pieceY, char player){
+        String message = boardX + "-" + boardY + "-" + pieceX + "-" + pieceY + "-" + player;
+        broadcast(message);
+    }
+    private void broadcastPlay(int[] play, char player){
+        broadcastPlay(play[0], play[1], play[2], play[3], player);
     }
 
     @Override
@@ -63,8 +76,13 @@ public class HostServer implements Runnable {
             playerTwo = new ClientThread(playerTwoSocket);
             System.out.println("O Connected");
 
-//            playerOne.start();
-//            playerTwo.start();
+            playerOne.start();
+            playerTwo.start();
+
+            while(running){
+                broadcastPlay(playerOne.getTurn(), 'x');
+                broadcastPlay(playerTwo.getTurn(), 'o');
+            }
         } catch(Exception e){e.printStackTrace();}
 
     }
@@ -76,17 +94,30 @@ public class HostServer implements Runnable {
         ObjectInputStream sInput;
         ObjectOutputStream sOutput;
 
+        boolean running = true;
+        public void stopRunning(){
+            running = false;
+        }
+
+        public int[] getTurn(){
+            int[] play = new int[4];
+            try {
+                String turn = (String) sInput.readObject();
+                String[] coords = turn.split("-");
+                for(int i = 0; i < play.length; i++){
+                    play[i] = Integer.parseInt(coords[i]);
+                }
+                System.out.println(turn);
+            } catch (Exception e) {e.printStackTrace();}
+            return play;
+        }
+
         public ClientThread(Socket socket){
             this.socket = socket;
             try{
                 sOutput = new ObjectOutputStream(socket.getOutputStream());
                 sInput = new ObjectInputStream(socket.getInputStream());
             } catch (Exception e) {e.printStackTrace();}
-
-            try{
-                String user = (String) sInput.readObject();
-                System.out.println(user + " has connected");
-            } catch (Exception e) { e.printStackTrace();}
         }
 
         public void sendMessage(String message){
@@ -97,12 +128,7 @@ public class HostServer implements Runnable {
 
         @Override
         public void run() {
-            while(true){
-                try{
-                    String message = (String) sInput.readObject();
-                    broadcast(message);
-                } catch (Exception e) {e.printStackTrace();}
-            }
+            //TODO: Add run code
         }
     }
 }
