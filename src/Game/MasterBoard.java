@@ -10,8 +10,16 @@ public class MasterBoard {
         }
     }
 
-    public void playPiece(char piece, int x, int y, int ix, int iy){
-        boards[translate(x,y)].playPiece(piece, translate(x,y));
+    public void playPiece(char piece, int boardX, int boardY, int pieceX, int pieceY){
+        boards[translate(boardX,boardY)].playPiece(piece, translate(pieceX,pieceY));
+    }
+
+    public char getPiece(int boardX, int boardY, int pieceX, int pieceY){
+        return getBoard(boardX, boardY).getPiece(translate(pieceX, pieceY));
+    }
+
+    public Board getBoard(int x, int y){
+        return boards[translate(x, y)];
     }
 
     private int translate(int x, int y){
