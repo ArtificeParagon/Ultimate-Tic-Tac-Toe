@@ -11,7 +11,7 @@ public class Board {
             pieces[i] = '-';
         }
         boardWon = false;
-
+        boardPiece = '-';
     }
 
     private void checkForWin(){
@@ -20,7 +20,7 @@ public class Board {
             one = pieces[i];
             two = pieces[i+1];
             three = pieces[i+2];
-            if(one == two && two == three){
+            if(one == two && two == three && one != '-'){
                 boardWon = true;
                 boardPiece = one;
             }
@@ -29,15 +29,22 @@ public class Board {
             one = pieces[i];
             two = pieces[i+3];
             three = pieces[i+6];
-            if(one == two && two == three){
+            if(one == two && two == three && one != '-'){
                 boardWon = true;
                 boardPiece = one;
             }
         }
-
+        if(pieces[0] == pieces[4] && pieces[4] == pieces[8] && pieces[4] != '-') {
+            boardWon = true;
+            boardPiece = pieces[4];
+        }
+        if(pieces[2] == pieces[4] && pieces[4] == pieces[6] && pieces[4] != '-') {
+            boardWon = true;
+            boardPiece = pieces[4];
+        }
     }
 
-    private boolean isValidMove(int square){
+    public boolean isValidMove(int square){
         if(boardWon) return false;
         if(pieces[square] == '-') return true;
         return false;
@@ -48,7 +55,12 @@ public class Board {
         checkForWin();
     }
 
+    public boolean isBoardWon() {return boardWon;}
+
     public char getPiece(int piece){
         return pieces[piece];
+    }
+    public char getBoardPiece() {
+        return boardPiece;
     }
 }

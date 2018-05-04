@@ -18,16 +18,15 @@ public class GameDialogs {
         alert.setContentText("Please select whether you would like to host a game, join a game someone" +
                 " else is hosting, or if you would like to player a local game.");
 
-        ButtonType localGame = new ButtonType("Local");
+//        ButtonType localGame = new ButtonType("Local");
         ButtonType joinGame = new ButtonType("Join");
         ButtonType hostGame = new ButtonType("Host");
 
-        alert.getButtonTypes().addAll(localGame, joinGame, hostGame);
+        alert.getButtonTypes().clear();
+        alert.getButtonTypes().addAll(joinGame, hostGame);
 
         Optional<ButtonType> result = alert.showAndWait();
-        if(result.get() == localGame){
-            return 0;
-        } else if(result.get() == joinGame){
+        if(result.get() == joinGame){
             return 2;
         }else /*hostGame*/{
             return 1;

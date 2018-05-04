@@ -1,5 +1,6 @@
 package Server;
 
+import Game.Game;
 import com.sun.security.ntlm.Server;
 
 import java.io.ObjectInputStream;
@@ -16,14 +17,17 @@ public class HostServer implements Runnable {
 
     private ClientThread playerOne;
     private ClientThread playerTwo;
+    private ClientThread currentPlayer;
     private ServerSocket serverSocket;
     private boolean running = true;
+
+    private Game game;
 
     public HostServer(){
         try{
             System.out.println("Starting server...");
             serverSocket = new ServerSocket(8080);
-            System.out.println("Awaiting connection on port " + serverSocket.getLocalPort());
+            System.out.println("Awaiting connection on IP: " + serverSocket.getInetAddress().getHostName() + ", port: " + serverSocket.getLocalPort());
         } catch(Exception e) {e.printStackTrace();}
     }
 
@@ -32,72 +36,86 @@ public class HostServer implements Runnable {
     }
 
     public void shutdown(){
-            playerOne.stopRunning();
-            playerTwo.stopRunning();
-            this.running = false;
+        running = false;
+        broadcastAction('q');
     }
 
-    public static void main(String args[]){
-        clients = new ArrayList<>();
-        oldPort = 8080;
-        try{
-            oldServerSocket = new ServerSocket(oldPort);
-            while(true){
-                System.out.println("Waiting for connections on oldPort " + oldPort + ".");
-                Socket socket = oldServerSocket.accept();
-
-                ClientThread client = new ClientThread(socket);
-                clients.add(client);
-                client.start();
-            }
-        } catch (Exception e) {e.printStackTrace();}
+    private void broadcastAction(char action){
+        playerOne.sendAction(action);
+        if(playerTwo != null)
+            playerTwo.sendAction(action);
     }
 
     private void broadcast(String message){
         playerOne.sendMessage(message);
         playerTwo.sendMessage(message);
     }
-    private void broadcastPlay(int boardX, int boardY, int pieceX, int pieceY, char player){
-        String message = boardX + "-" + boardY + "-" + pieceX + "-" + pieceY + "-" + player;
+    private void broadcastPlay(int boardX, int boardY, int pieceX, int pieceY, char player, int next){
+        String message = boardX + "-" + boardY + "-" + pieceX + "-" + pieceY + "-" + player + '-' + next;
         broadcast(message);
     }
     private void broadcastPlay(int[] play, char player){
-        broadcastPlay(play[0], play[1], play[2], play[3], player);
+        broadcastAction('p');
+        broadcastPlay(play[0], play[1], play[2], play[3], player, game.getNextBoard());
+
+    }
+    private void broadcastTextMessage(String message){
+        playerOne.sendTextMessage(message);
+        playerTwo.sendTextMessage(message);
     }
 
     @Override
     public void run() {
         try {
             Socket playerOneSocket = serverSocket.accept();
-            playerOne = new ClientThread(playerOneSocket);
+            playerOne = new ClientThread(playerOneSocket, 'x');
             System.out.println("X connected");
+            playerOne.sendTextMessage("You are X");
 
             Socket playerTwoSocket = serverSocket.accept();
-            playerTwo = new ClientThread(playerTwoSocket);
+            playerTwo = new ClientThread(playerTwoSocket, 'o');
             System.out.println("O Connected");
+            playerTwo.sendTextMessage("You are O");
 
-            playerOne.start();
-            playerTwo.start();
+            boolean validTurn = false;
+            int[] turn;
+            currentPlayer = playerOne;
 
+            game = new Game();
             while(running){
-                broadcastPlay(playerOne.getTurn(), 'x');
-                broadcastPlay(playerTwo.getTurn(), 'o');
+                do {
+                    turn = currentPlayer.getTurn();
+                    validTurn = game.isMoveValid(turn[0], turn[1], turn[2], turn[3]);
+                    if(!validTurn) invalidTurn();
+                } while (!validTurn);
+                game.playPiece(turn, currentPlayer.getPlayer());
+                broadcastPlay(turn, currentPlayer.getPlayer());
+                if(game.isWon()){
+                    broadcastTextMessage(currentPlayer.getPlayer() + " HAS WON");
+                    running = false;
+                }
+
+                // Switch current player
+                if(currentPlayer == playerOne) currentPlayer = playerTwo;
+                else currentPlayer = playerOne;
             }
+
+            shutdown();
         } catch(Exception e){e.printStackTrace();}
 
     }
 
+    private void invalidTurn(){
+        currentPlayer.sendTextMessage("Invalid Move");
+    }
+
     //TODO: Edit this to better suite the game
-    static class ClientThread extends Thread {
+    static class ClientThread {
 
         Socket socket;
+        char player;
         ObjectInputStream sInput;
         ObjectOutputStream sOutput;
-
-        boolean running = true;
-        public void stopRunning(){
-            running = false;
-        }
 
         public int[] getTurn(){
             int[] play = new int[4];
@@ -112,7 +130,8 @@ public class HostServer implements Runnable {
             return play;
         }
 
-        public ClientThread(Socket socket){
+        public ClientThread(Socket socket, char player){
+            this.player = player;
             this.socket = socket;
             try{
                 sOutput = new ObjectOutputStream(socket.getOutputStream());
@@ -126,9 +145,21 @@ public class HostServer implements Runnable {
             } catch (Exception e) {e.printStackTrace();}
         }
 
-        @Override
-        public void run() {
-            //TODO: Add run code
+        public void sendTextMessage(String message){
+            try{
+                sOutput.writeChar('i');
+                sOutput.writeObject(message);
+            } catch (Exception e) {e.printStackTrace();}
+        }
+
+        public void sendAction(char action){
+            try{
+                sOutput.writeChar(action);
+            } catch (Exception e) {e.printStackTrace();}
+        }
+
+        public char getPlayer(){
+            return player;
         }
     }
 }

@@ -16,13 +16,32 @@ public class PlayerConnection implements Runnable{
     public PlayerConnection(String ip, int port) {
         connectToServer(ip, port);
         Thread thread = new Thread(this);
+        thread.setName("PC THREAD");
         thread.start();
     }
 
     @Override
     public void run() {
         while (running){
-            receivePlay();
+            char action = receiveAction();
+            switch(action){
+                case 'p':
+                    receivePlay();
+                    break;
+                case 'i':
+                    receiveMessage();
+                    break;
+                case 'q':
+                    quitReceieved();
+                    break;
+                case 'n':
+                    colorNextSquare();
+                    break;
+                case 'w':
+                    receiveMessage();
+                    gameWonAlert();
+                    break;
+            }
         }
     }
 
@@ -41,28 +60,66 @@ public class PlayerConnection implements Runnable{
         } catch (Exception e) {e.printStackTrace();}
     }
 
-    public void receivePlay(){
-        int[] play = new int[4];
+    private char receiveAction(){
+        char result = '-';
+        try{
+            result = inputFromServer.readChar();
+        } catch (Exception e) {e.printStackTrace();}
+        return result;
+    }
+
+    private void receivePlay(){
+        int[] play = new int[5];
         char player = ' ';
-        System.out.println("Ready to receive");
+        int nextSquare = 0;
         try {
             String turn = (String) inputFromServer.readObject();
-            System.out.println("received");
             String[] coords = turn.split("-");
-            for(int i = 0; i < play.length; i++){
+            for(int i = 0; i < 4; i++){
                 play[i] = Integer.parseInt(coords[i]);
             }
             player = coords[4].charAt(0);
+            if(coords[5].equals("")){
+                nextSquare = -1;
+            } else {
+                nextSquare = Integer.parseInt(coords[5]);
+            }
         } catch (Exception e) {e.printStackTrace();}
 
         switch (player){
             case 'x':
                 Renderer.getInstance().drawX(play[0], play[1], play[2], play[3]);
+                Renderer.getInstance().underline('x');
                 break;
             case 'o':
                 Renderer.getInstance().drawO(play[0], play[1], play[2], play[3]);
+                Renderer.getInstance().underline('o');
                 break;
         }
+        Renderer.getInstance().renderPlayableSquare(nextSquare);
+    }
+
+    private int translate(int x, int y){
+        return x + y * 3;
+    }
+
+    private void receiveMessage(){
+        try {
+            String message = (String) inputFromServer.readObject();
+            Renderer.getInstance().renderMessage(message);
+        } catch (Exception e) {e.printStackTrace();}
+    }
+    private void colorNextSquare(){
+        try{
+            int nextSquare = inputFromServer.readInt();
+            Renderer.getInstance().renderPlayableSquare(nextSquare);
+        } catch (Exception e){e.printStackTrace();}
+    }
+    private void quitReceieved(){
+        running = false;
+    }
+    private void gameWonAlert(){
+
     }
 
 }

@@ -15,7 +15,6 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Pair;
 
-import java.net.Socket;
 import java.util.Optional;
 
 public class Client extends Application {
@@ -23,6 +22,7 @@ public class Client extends Application {
     private HostServer server;
     private PlayerConnection solo;
     private PlayerConnection multi;
+    private Thread serverThread;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -35,6 +35,9 @@ public class Client extends Application {
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
         Renderer.getInstance(gc).drawBoard();
+        Renderer.getInstance().renderInfo();
+        Renderer.getInstance().renderPlayableSquare(-1);
+        Renderer.getInstance().underline('o');
         root.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -58,6 +61,7 @@ public class Client extends Application {
                 startServer();
                 stage.setOnCloseRequest((WindowEvent event) -> {
                     server.shutdown();
+                    solo.sendPlay(0,0,0,0);
                 });
                 solo = new PlayerConnection("localhost", server.getPort());
                 break;
@@ -68,6 +72,7 @@ public class Client extends Application {
                 startServer();
                 stage.setOnCloseRequest((WindowEvent event) -> {
                     server.shutdown();
+                    solo.sendPlay(0,0,0,0);
                 });
                 solo = new PlayerConnection("localhost", server.getPort());
                 multi = new PlayerConnection("localhost", server.getPort());
@@ -78,7 +83,8 @@ public class Client extends Application {
 
     public void startServer(){
         server = new HostServer();
-        Thread serverThread = new Thread(server);
+        serverThread = new Thread(server);
+        serverThread.setName("Server Thread");
         serverThread.start();
     }
     public void connectToServer(){
