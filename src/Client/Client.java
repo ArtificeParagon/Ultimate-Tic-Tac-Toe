@@ -5,6 +5,7 @@ import Server.HostServer;
 import Server.PlayerConnection;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -60,8 +61,9 @@ public class Client extends Application {
             case 1:
                 startServer();
                 stage.setOnCloseRequest((WindowEvent event) -> {
-                    server.shutdown();
-                    solo.sendPlay(0,0,0,0);
+//                    server.shutdown();
+//                    solo.sendPlay(0,0,0,0);
+                    Platform.exit();
                 });
                 solo = new PlayerConnection("localhost", server.getPort());
                 break;
@@ -71,8 +73,9 @@ public class Client extends Application {
             case 0:
                 startServer();
                 stage.setOnCloseRequest((WindowEvent event) -> {
-                    server.shutdown();
-                    solo.sendPlay(0,0,0,0);
+//                    server.shutdown();
+//                    solo.sendPlay(0,0,0,0);
+                    Platform.exit();
                 });
                 solo = new PlayerConnection("localhost", server.getPort());
                 multi = new PlayerConnection("localhost", server.getPort());

@@ -11,10 +11,6 @@ import java.util.ArrayList;
 
 public class HostServer implements Runnable {
 
-    private static ArrayList<ClientThread> clients;
-    private static int oldPort;
-    private static ServerSocket oldServerSocket;
-
     private ClientThread playerOne;
     private ClientThread playerTwo;
     private ClientThread currentPlayer;
@@ -26,7 +22,7 @@ public class HostServer implements Runnable {
     public HostServer(){
         try{
             System.out.println("Starting server...");
-            serverSocket = new ServerSocket(8080);
+            serverSocket = new ServerSocket(0);
             System.out.println("Awaiting connection on IP: " + serverSocket.getInetAddress().getHostName() + ", port: " + serverSocket.getLocalPort());
         } catch(Exception e) {e.printStackTrace();}
     }
@@ -70,11 +66,13 @@ public class HostServer implements Runnable {
             Socket playerOneSocket = serverSocket.accept();
             playerOne = new ClientThread(playerOneSocket, 'x');
             System.out.println("X connected");
-            playerOne.sendTextMessage("You are X");
+            playerOne.sendTextMessage("Server started on port: " + getPort());
 
             Socket playerTwoSocket = serverSocket.accept();
             playerTwo = new ClientThread(playerTwoSocket, 'o');
             System.out.println("O Connected");
+
+            playerOne.sendTextMessage("You are X");
             playerTwo.sendTextMessage("You are O");
 
             boolean validTurn = false;
